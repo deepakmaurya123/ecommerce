@@ -19,10 +19,16 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from register import views
+from order import views as order_views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/register/', views.RegisterView.as_view(), name='register'),
     path('api/', include('product.urls')),
-    path('api/', include('cart.urls'))
+    path('api/', include('cart.urls')),
+    path('api/order/create/', order_views.OrderCreateView.as_view(), name='order-create'),
+
 ]
 
 if settings.DEBUG:
