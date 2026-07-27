@@ -13,7 +13,14 @@ class CategoryList(APIView):
 
 class ProductList(APIView):
     def get(self, request):
-        products = Product.objects.all()
+        category = request.query_params.get('category')
+        if category and category != 'all':
+            if category.isdigit():
+                products = Product.objects.filter(category__id=category)
+            else:
+                products = Product.objects.filter(category__slug=category)
+        else:
+            products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 

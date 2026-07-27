@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from requests import Response
 from .serializers import RegisterSerializer, UserSerializer
+from rest_framework.views import APIView
 
 # Create your views here.
 
-class RegisterView:
+class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():

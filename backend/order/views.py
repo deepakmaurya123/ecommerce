@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from requests import Response
 from .models import Order, OrderItem
+from rest_framework.views import APIView
 
-from backend.cart.models import Cart
+from cart.models import Cart
 
 # Create your views here.
 
-class OrderCreateView:
+class OrderCreateView(APIView):
     def post(self, request):
         try:
             data = request.data
