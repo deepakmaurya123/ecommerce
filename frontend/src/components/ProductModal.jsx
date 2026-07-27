@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { addToCart } from '../api/client';
+import { useCart } from '../context/CartContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
@@ -11,18 +11,23 @@ const ERROR = 'error';
 
 export default function ProductModal({ product, onClose }) {
   const overlayRef = useRef(null);
+  const { addItemToCart } = useCart();
   const [toast, setToast] = useState(IDLE);
   const [toastMsg, setToastMsg] = useState('');
 
   /* lock body scroll while modal is open */
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, []);
 
   /* close on Escape */
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
@@ -35,18 +40,14 @@ export default function ProductModal({ product, onClose }) {
   const handleAddToCart = async () => {
     setToast(LOADING);
     try {
-      await addToCart(product.id);
+      await addItemToCart(product);
       setToast(SUCCESS);
       setToastMsg('Added to cart!');
-    } catch (err) {
+    } catch {
       setToast(ERROR);
-      if (err.status === 401 || err.status === 403) {
-        setToastMsg('Please log in to add items to your cart.');
-      } else {
-        setToastMsg('Something went wrong. Try again.');
-      }
+      setToastMsg('Failed to add to cart.');
     } finally {
-      setTimeout(() => setToast(IDLE), 3000);
+      setTimeout(() => setToast(IDLE), 2500);
     }
   };
 
@@ -63,7 +64,9 @@ export default function ProductModal({ product, onClose }) {
     >
       <div className="modal">
         {/* Close button */}
-        <button className="modal__close" onClick={onClose} aria-label="Close modal">✕</button>
+        <button className="modal__close" onClick={onClose} aria-label="Close modal">
+          ✕
+        </button>
 
         {/* Image */}
         <div className="modal__image-wrap">
@@ -82,14 +85,14 @@ export default function ProductModal({ product, onClose }) {
           <h2 className="modal__title">{product.name}</h2>
           <p className="modal__price">₹{Number(product.price).toLocaleString('en-IN')}</p>
 
-          {product.description && (
-            <p className="modal__description">{product.description}</p>
-          )}
+          {product.description && <p className="modal__description">{product.description}</p>}
 
           {/* Add to Cart button */}
           <button
             id={`add-to-cart-${product.id}`}
-            className={`btn-cart ${toast === LOADING ? 'btn-cart--loading' : ''} ${toast === SUCCESS ? 'btn-cart--success' : ''} ${toast === ERROR ? 'btn-cart--error' : ''}`}
+            className={`btn-cart ${toast === LOADING ? 'btn-cart--loading' : ''} ${
+              toast === SUCCESS ? 'btn-cart--success' : ''
+            } ${toast === ERROR ? 'btn-cart--error' : ''}`}
             onClick={handleAddToCart}
             disabled={toast === LOADING}
           >
