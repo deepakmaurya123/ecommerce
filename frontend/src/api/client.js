@@ -6,6 +6,15 @@ const apiFetch = async (endpoint) => {
   return res.json();
 };
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('access_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const getCategories = () => apiFetch('/categories/');
 export const getProducts = (categorySlug) =>
   apiFetch(categorySlug ? `/products/?category=${categorySlug}` : '/products/');
@@ -13,6 +22,7 @@ export const getProduct = (id) => apiFetch(`/products/${id}/`);
 
 export const getCart = async () => {
   const res = await fetch(`${BASE_URL}/cart/`, {
+    headers: getAuthHeaders(),
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to fetch cart');
@@ -22,7 +32,7 @@ export const getCart = async () => {
 export const addToCart = async (productId) => {
   const res = await fetch(`${BASE_URL}/cart/add/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify({ product_id: productId }),
   });
@@ -36,7 +46,7 @@ export const addToCart = async (productId) => {
 export const updateCartQuantity = async (itemId, quantity) => {
   const res = await fetch(`${BASE_URL}/cart/update/`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify({ item_id: itemId, quantity }),
   });
@@ -47,6 +57,7 @@ export const updateCartQuantity = async (itemId, quantity) => {
 export const deleteCartItem = async (itemId) => {
   const res = await fetch(`${BASE_URL}/cart/delete/${itemId}/`, {
     method: 'DELETE',
+    headers: getAuthHeaders(),
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Delete item failed');
@@ -56,7 +67,7 @@ export const deleteCartItem = async (itemId) => {
 export const createOrder = async (orderData) => {
   const res = await fetch(`${BASE_URL}/order/create/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     credentials: 'include',
     body: JSON.stringify(orderData),
   });
@@ -66,4 +77,72 @@ export const createOrder = async (orderData) => {
   }
   return res.json();
 };
+
+export const loginUser = async (credentials) => {
+  const res = await fetch(`${BASE_URL}/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(credentials),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = data.error || (data.detail ? data.detail : 'Login failed');
+    throw Object.assign(new Error(errorMsg), { status: res.status, data });
+  }
+  if (data.tokens && data.tokens.access) {
+    localStorage.setItem('access_token', data.tokens.access);
+    localStorage.setItem('refresh_token', data.tokens.refresh);
+  }
+  return data;
+};
+
+export const registerUser = async (userData) => {
+  const res = await fetch(`${BASE_URL}/register/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(userData),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let errorMsg = 'Registration failed';
+    if (typeof data === 'object' && data !== null) {
+      const keys = Object.keys(data);
+      if (keys.length > 0) {
+        const firstErr = data[keys[0]];
+        errorMsg = Array.isArray(firstErr) ? firstErr[0] : String(firstErr);
+      }
+    }
+    throw Object.assign(new Error(errorMsg), { status: res.status, data });
+  }
+  if (data.tokens && data.tokens.access) {
+    localStorage.setItem('access_token', data.tokens.access);
+    localStorage.setItem('refresh_token', data.tokens.refresh);
+  }
+  return data;
+};
+
+export const logoutUser = async () => {
+  const res = await fetch(`${BASE_URL}/logout/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  });
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  if (!res.ok) throw new Error('Logout failed');
+  return res.json();
+};
+
+export const getCurrentUser = async () => {
+  const res = await fetch(`${BASE_URL}/user/me/`, {
+    headers: getAuthHeaders(),
+    credentials: 'include',
+  });
+  if (!res.ok) return { authenticated: false, user: null };
+  return res.json();
+};
+
+
 

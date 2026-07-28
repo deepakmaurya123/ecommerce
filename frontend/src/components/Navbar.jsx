@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { totalCount } = useCart();
+  const { user, logout } = useAuth();
 
   return (
     <nav className="navbar">
@@ -28,8 +30,23 @@ export default function Navbar() {
               {totalCount > 0 && <span className="cart-badge">{totalCount}</span>}
             </NavLink>
           </li>
+          <li>
+            {user ? (
+              <div className="navbar__user">
+                <span className="user-greeting">👤 {user.username}</span>
+                <button type="button" onClick={logout} className="navbar__logout-btn">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <NavLink to="/login" className={({ isActive }) => `navbar__login-btn ${isActive ? 'active' : ''}`}>
+                Login / Register
+              </NavLink>
+            )}
+          </li>
         </ul>
       </div>
     </nav>
   );
 }
+
