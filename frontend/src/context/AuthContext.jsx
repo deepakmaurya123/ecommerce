@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser, registerUser, logoutUser, getCurrentUser } from '../api/client';
+import { loginUser, registerUser, logoutUser } from '../api/client';
 
 const AuthContext = createContext();
 
@@ -17,27 +17,12 @@ export function AuthProvider({ children }) {
 
 
   useEffect(() => {
-    // Check saved session/user on mount
-    const fetchUser = async () => {
-      try {
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
-        const data = await getCurrentUser();
-        if (data.authenticated && data.user) {
-          setUser(data.user);
-          localStorage.setItem('user', JSON.stringify(data.user));
-        } else {
-          if (!savedUser) setUser(null);
-        }
-      } catch (err) {
-        console.error('Failed to verify user session', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
+    // Load auth state from localStorage on mount
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
 
   const login = async (credentials) => {
@@ -51,10 +36,6 @@ export function AuthProvider({ children }) {
 
   const register = async (userData) => {
     const data = await registerUser(userData);
-    if (data.user) {
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
-    }
     return data;
   };
 

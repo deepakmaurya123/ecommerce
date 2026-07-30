@@ -33,11 +33,17 @@ export default function Cart() {
     setErrorMessage('');
 
     try {
-      const res = await createOrder({ name, address, phone, payment_method: paymentMethod });
+      const res = await createOrder({
+        name,
+        address,
+        phone,
+        payment_method: paymentMethod,
+      });
       setOrderSuccess(res);
       clearCart();
     } catch (err) {
-      setErrorMessage(err?.data?.error || err?.message || 'Checkout failed. Please try again.');
+      const message = err?.data?.error || err?.message || 'Checkout failed. Please try again.';
+      setErrorMessage(message);
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +81,7 @@ export default function Cart() {
             <h3>Login Required</h3>
             <p>Please log in to view and manage your cart.</p>
             <Link to="/login" className="btn-primary" style={{ marginTop: 16 }}>
-              Login / Register
+              Login
             </Link>
           </div>
         </div>

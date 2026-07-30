@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { registerUser } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
+  const { user, register } = useAuth();
   const [form, setForm] = useState({ username: "", email: "", password: "", password2: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      nav("/");
+    }
+  }, [user, nav]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -20,12 +27,15 @@ function Register() {
 
     setLoading(true);
     try {
-      const data = await registerUser(form);
-      setMsg("Registration successful!");
-      setTimeout(() => nav("/"), 800);
+      await register(form);
+      nav("/login", {
+        state: {
+          message: "Registration successful! Please login with your new account.",
+        },
+      });
     } catch (err) {
       console.error(err);
-      setMsg("Registration failed");
+      setMsg(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }

@@ -40,7 +40,7 @@ export default function Navbar() {
               </div>
             ) : (
               <NavLink to="/login" className={({ isActive }) => `navbar__login-btn ${isActive ? 'active' : ''}`}>
-                Login / Register
+                Login
               </NavLink>
             )}
           </li>

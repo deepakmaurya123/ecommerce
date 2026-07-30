@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
 
 const apiFetch = async (endpoint) => {
   const res = await fetch(`${BASE_URL}${endpoint}`);
@@ -10,9 +10,40 @@ const getAuthHeaders = () => {
   const token = localStorage.getItem('access_token');
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.Authorization = `Bearer ${token}`;
   }
   return headers;
+};
+
+const requestJson = async (endpoint, options = {}) => {
+  const { method = 'GET', body, headers = {} } = options;
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    method,
+    headers: { ...getAuthHeaders(), ...headers },
+    credentials: 'include',
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
+
+  const contentType = res.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await res.json().catch(() => ({}))
+    : await res.text().catch(() => '');
+
+  if (!res.ok) {
+    let message = 'Request failed';
+    if (data && typeof data === 'object') {
+      if (typeof data.error === 'string') message = data.error;
+      else if (typeof data.detail === 'string') message = data.detail;
+      else if (typeof data.message === 'string') message = data.message;
+      else if (Array.isArray(data) && data.length > 0) message = String(data[0]);
+    } else if (typeof data === 'string' && data) {
+      message = data;
+    }
+
+    throw Object.assign(new Error(message), { status: res.status, data });
+  }
+
+  return data;
 };
 
 export const getCategories = () => apiFetch('/categories/');
@@ -20,63 +51,43 @@ export const getProducts = (categorySlug) =>
   apiFetch(categorySlug ? `/products/?category=${categorySlug}` : '/products/');
 export const getProduct = (id) => apiFetch(`/products/${id}/`);
 
-export const getCart = async () => {
-  const res = await fetch(`${BASE_URL}/cart/`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error('Failed to fetch cart');
-  return res.json();
+export const normalizeCartItems = (cartData) => {
+  if (!cartData || !Array.isArray(cartData.items)) return [];
+
+  return cartData.items.map((item) => ({
+    id: item.id,
+    productId: item.product,
+    name: item.product_name || 'Unnamed product',
+    price: Number(item.product_price || 0),
+    image: item.product_image || null,
+    quantity: Number(item.quantity || 0),
+  }));
 };
 
-export const addToCart = async (productId) => {
-  const res = await fetch(`${BASE_URL}/cart/add/`, {
+export const getCart = async () => requestJson('/cart/');
+
+export const addToCart = async (productId) =>
+  requestJson('/cart/add/', {
     method: 'POST',
-    headers: getAuthHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({ product_id: productId }),
+    body: { product_id: productId },
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw Object.assign(new Error('Add to cart failed'), { status: res.status, data });
-  }
-  return res.json();
-};
 
-export const updateCartQuantity = async (itemId, quantity) => {
-  const res = await fetch(`${BASE_URL}/cart/update/`, {
+export const updateCartQuantity = async (itemId, quantity) =>
+  requestJson('/cart/update/', {
     method: 'PUT',
-    headers: getAuthHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({ item_id: itemId, quantity }),
+    body: { item_id: itemId, quantity },
   });
-  if (!res.ok) throw new Error('Update quantity failed');
-  return res.json();
-};
 
-export const deleteCartItem = async (itemId) => {
-  const res = await fetch(`${BASE_URL}/cart/delete/${itemId}/`, {
+export const deleteCartItem = async (itemId) =>
+  requestJson(`/cart/delete/${itemId}/`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
-    credentials: 'include',
   });
-  if (!res.ok) throw new Error('Delete item failed');
-  return res.json();
-};
 
-export const createOrder = async (orderData) => {
-  const res = await fetch(`${BASE_URL}/order/create/`, {
+export const createOrder = async (orderData) =>
+  requestJson('/order/create/', {
     method: 'POST',
-    headers: getAuthHeaders(),
-    credentials: 'include',
-    body: JSON.stringify(orderData),
+    body: orderData,
   });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw Object.assign(new Error('Checkout failed'), { status: res.status, data });
-  }
-  return res.json();
-};
 
 export const loginUser = async (credentials) => {
   const res = await fetch(`${BASE_URL}/login/`, {
@@ -89,7 +100,6 @@ export const loginUser = async (credentials) => {
     const errorMsg = data.error || data.detail || 'Login failed';
     throw Object.assign(new Error(errorMsg), { status: res.status, data });
   }
-  // backend returns top-level `access`, `refresh`, and `user`
   if (data.access) localStorage.setItem('access_token', data.access);
   if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
   if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
@@ -135,15 +145,6 @@ export const logoutUser = async () => {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error('Logout failed'), { status: res.status, data });
   return data;
-};
-
-export const getCurrentUser = async () => {
-  const res = await fetch(`${BASE_URL}/user/me/`, {
-    headers: getAuthHeaders(),
-    credentials: 'include',
-  });
-  if (!res.ok) return { authenticated: false, user: null };
-  return res.json();
 };
 
 
