@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const apiFetch = async (endpoint) => {
   const res = await fetch(`${BASE_URL}${endpoint}`);
@@ -82,18 +82,17 @@ export const loginUser = async (credentials) => {
   const res = await fetch(`${BASE_URL}/login/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify(credentials),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const errorMsg = data.error || (data.detail ? data.detail : 'Login failed');
+    const errorMsg = data.error || data.detail || 'Login failed';
     throw Object.assign(new Error(errorMsg), { status: res.status, data });
   }
-  if (data.tokens && data.tokens.access) {
-    localStorage.setItem('access_token', data.tokens.access);
-    localStorage.setItem('refresh_token', data.tokens.refresh);
-  }
+  // backend returns top-level `access`, `refresh`, and `user`
+  if (data.access) localStorage.setItem('access_token', data.access);
+  if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+  if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
   return data;
 };
 
@@ -124,15 +123,18 @@ export const registerUser = async (userData) => {
 };
 
 export const logoutUser = async () => {
+  const refresh = localStorage.getItem('refresh_token');
   const res = await fetch(`${BASE_URL}/logout/`, {
     method: 'POST',
-    headers: getAuthHeaders(),
-    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
   });
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
-  if (!res.ok) throw new Error('Logout failed');
-  return res.json();
+  localStorage.removeItem('user');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error('Logout failed'), { status: res.status, data });
+  return data;
 };
 
 export const getCurrentUser = async () => {

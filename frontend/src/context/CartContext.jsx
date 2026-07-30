@@ -1,47 +1,47 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getCart, addToCart as apiAddToCart, updateCartQuantity as apiUpdateCartQuantity, deleteCartItem as apiDeleteCartItem } from '../api/client';
+import {
+  getCart,
+  addToCart as apiAddToCart,
+  updateCartQuantity as apiUpdateCartQuantity,
+  deleteCartItem as apiDeleteCartItem,
+} from '../api/client';
 
 const CartContext = createContext();
 
+// Check if a JWT token is stored (user is logged in)
+const isLoggedIn = () => !!localStorage.getItem('access_token');
+
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const local = localStorage.getItem('shopnest_cart');
-      return local ? JSON.parse(local) : [];
-    } catch {
-      return [];
-    }
-  });
-
+  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cartError, setCartError] = useState(null);
 
-  // Save to local storage on change
-  useEffect(() => {
-    try {
-      localStorage.setItem('shopnest_cart', JSON.stringify(cartItems));
-    } catch (err) {
-      console.error('Failed to save cart to local storage', err);
-    }
-  }, [cartItems]);
+  // Parse backend cart response into local item shape
+  const parseBackendCart = (data) => {
+    if (!data || !Array.isArray(data.items)) return [];
+    return data.items.map((item) => ({
+      id: item.id,
+      productId: item.product,
+      name: item.product_name,
+      price: parseFloat(item.product_price),
+      image: item.product_image,
+      quantity: item.quantity,
+    }));
+  };
 
-  // Fetch cart from backend on mount
+  // Fetch cart from backend — only if user has a JWT token
   const fetchCartFromBackend = useCallback(async () => {
+    if (!isLoggedIn()) {
+      setCartItems([]);
+      return;
+    }
     try {
       setLoading(true);
+      setCartError(null);
       const data = await getCart();
-      if (data && Array.isArray(data.items)) {
-        const formatted = data.items.map((item) => ({
-          id: item.id,
-          productId: item.product,
-          name: item.product_name,
-          price: parseFloat(item.product_price),
-          image: item.product_image,
-          quantity: item.quantity,
-        }));
-        setCartItems(formatted);
-      }
-    } catch {
-      // Backend cart fetch failed or unauthenticated: keep local cart
+      setCartItems(parseBackendCart(data));
+    } catch (err) {
+      setCartError(err.message || 'Failed to load cart');
     } finally {
       setLoading(false);
     }
@@ -51,79 +51,66 @@ export function CartProvider({ children }) {
     fetchCartFromBackend();
   }, [fetchCartFromBackend]);
 
-  // Add item to cart (Calls backend API & updates state)
+  // Add item — requires login
   const addItemToCart = async (product) => {
-    let apiSuccess = false;
-    try {
-      await apiAddToCart(product.id);
-      apiSuccess = true;
-      fetchCartFromBackend();
-    } catch {
-      // Fallback local update if backend fails or unauthenticated
+    if (!isLoggedIn()) {
+      setCartError('Please log in to add items to your cart.');
+      return { requiresLogin: true };
     }
-
-    if (!apiSuccess) {
-      setCartItems((prev) => {
-        const existingIndex = prev.findIndex((item) => item.productId === product.id || item.id === product.id);
-        if (existingIndex > -1) {
-          const updated = [...prev];
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            quantity: updated[existingIndex].quantity + 1,
-          };
-          return updated;
-        } else {
-          return [
-            ...prev,
-            {
-              id: product.id,
-              productId: product.id,
-              name: product.name,
-              price: parseFloat(product.price),
-              image: product.image,
-              quantity: 1,
-            },
-          ];
-        }
-      });
+    try {
+      setCartError(null);
+      await apiAddToCart(product.id);
+      await fetchCartFromBackend(); // Refresh full cart from backend
+    } catch (err) {
+      const msg = err?.data?.error || err?.message || 'Failed to add item';
+      setCartError(msg);
+      throw err;
     }
   };
 
-  // Update item quantity
+  // Update quantity — requires login
   const updateQuantity = async (itemId, newQuantity) => {
+    if (!isLoggedIn()) {
+      setCartError('Please log in to manage your cart.');
+      return;
+    }
     if (newQuantity < 1) {
       return removeItem(itemId);
     }
-
     try {
+      setCartError(null);
       await apiUpdateCartQuantity(itemId, newQuantity);
-    } catch {
-      // Fallback local state update
+      // Optimistic update in state
+      setCartItems((prev) =>
+        prev.map((item) => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+      );
+    } catch (err) {
+      setCartError(err.message || 'Failed to update quantity');
+      await fetchCartFromBackend(); // Re-sync on failure
     }
-
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
-    );
   };
 
-  // Remove item
+  // Remove item — requires login
   const removeItem = async (itemId) => {
-    try {
-      await apiDeleteCartItem(itemId);
-    } catch {
-      // Fallback local state update
+    if (!isLoggedIn()) {
+      setCartError('Please log in to manage your cart.');
+      return;
     }
-
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    try {
+      setCartError(null);
+      await apiDeleteCartItem(itemId);
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    } catch (err) {
+      setCartError(err.message || 'Failed to remove item');
+      await fetchCartFromBackend(); // Re-sync on failure
+    }
   };
 
-  // Clear cart
+  // Clear cart locally after order is placed
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem('shopnest_cart');
   };
 
-  // Computations
   const totalCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -134,11 +121,13 @@ export function CartProvider({ children }) {
         totalCount,
         totalPrice,
         loading,
+        cartError,
         addItemToCart,
         updateQuantity,
         removeItem,
         clearCart,
         fetchCartFromBackend,
+        isAuthenticated: isLoggedIn,
       }}
     >
       {children}

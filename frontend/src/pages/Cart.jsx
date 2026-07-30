@@ -3,16 +3,24 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../api/client';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function Cart() {
-  const { cartItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
+  const {
+    cartItems,
+    totalPrice,
+    updateQuantity,
+    removeItem,
+    clearCart,
+    cartError,
+    isAuthenticated,
+    loading,
+  } = useCart();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('UPI');
-
   const [submitting, setSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -25,32 +33,17 @@ export default function Cart() {
     setErrorMessage('');
 
     try {
-      const res = await createOrder({
-        name,
-        address,
-        phone,
-        payment_method: paymentMethod,
-      });
-
+      const res = await createOrder({ name, address, phone, payment_method: paymentMethod });
       setOrderSuccess(res);
       clearCart();
     } catch (err) {
-      if (err.data?.error) {
-        setErrorMessage(err.data.error);
-      } else {
-        // Fallback order placement for preview
-        const mockOrderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-        setOrderSuccess({
-          message: 'Order placed successfully!',
-          order_id: mockOrderId,
-        });
-        clearCart();
-      }
+      setErrorMessage(err?.data?.error || err?.message || 'Checkout failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  // ── Order success screen ─────────────────────────────────────
   if (orderSuccess) {
     return (
       <div className="page">
@@ -71,13 +64,46 @@ export default function Cart() {
     );
   }
 
+  // ── Not logged in ────────────────────────────────────────────
+  if (!isAuthenticated()) {
+    return (
+      <div className="page">
+        <div className="container">
+          <h1 className="page__title">Your Shopping Cart</h1>
+          <div className="state-wrapper">
+            <span className="icon">🔒</span>
+            <h3>Login Required</h3>
+            <p>Please log in to view and manage your cart.</p>
+            <Link to="/login" className="btn-primary" style={{ marginTop: 16 }}>
+              Login / Register
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Authenticated ────────────────────────────────────────────
   return (
     <div className="page">
       <div className="container">
         <h1 className="page__title">Your Shopping Cart</h1>
         <p className="page__subtitle">Review your items and complete your purchase</p>
 
-        {cartItems.length === 0 ? (
+        {/* Cart API error banner */}
+        {cartError && (
+          <div className="error-box" style={{ marginBottom: 16 }}>{cartError}</div>
+        )}
+
+        {/* Loading state */}
+        {loading && (
+          <div className="state-wrapper">
+            <p>Loading your cart...</p>
+          </div>
+        )}
+
+        {/* Empty cart */}
+        {!loading && cartItems.length === 0 && (
           <div className="state-wrapper">
             <span className="icon">🛒</span>
             <h3>Your cart is empty</h3>
@@ -86,7 +112,10 @@ export default function Cart() {
               Explore Products
             </Link>
           </div>
-        ) : (
+        )}
+
+        {/* Cart items + checkout */}
+        {!loading && cartItems.length > 0 && (
           <div className="checkout-grid">
             {/* Cart Items List */}
             <div className="cart-list-section">
@@ -116,7 +145,7 @@ export default function Cart() {
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           aria-label="Decrease quantity"
                         >
-                          -
+                          −
                         </button>
                         <span className="qty-value">{item.quantity}</span>
                         <button
@@ -158,7 +187,7 @@ export default function Cart() {
                     <span className="pay-subtext">(GPay, PhonePe, Paytm, BHIM)</span>
                   </div>
                   <div className="pay-badge">
-                    <span className="pay-icon">🏦</span> Net Banking & Wallet
+                    <span className="pay-icon">🏦</span> Net Banking &amp; Wallet
                   </div>
                 </div>
               </div>
@@ -186,9 +215,9 @@ export default function Cart() {
                   <span className="total-amount">₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
 
-                {/* Shipping Details & Payment Form */}
+                {/* Shipping & Payment Form */}
                 <form onSubmit={handleCheckout} className="checkout-form">
-                  <h4>Delivery & Payment Details</h4>
+                  <h4>Delivery &amp; Payment Details</h4>
 
                   {errorMessage && <div className="error-box">{errorMessage}</div>}
 
@@ -244,12 +273,10 @@ export default function Cart() {
                     </select>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn-checkout"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Processing Order...' : `Checkout • ₹${totalPrice.toLocaleString('en-IN')}`}
+                  <button type="submit" className="btn-checkout" disabled={submitting}>
+                    {submitting
+                      ? 'Processing Order...'
+                      : `Checkout • ₹${totalPrice.toLocaleString('en-IN')}`}
                   </button>
                 </form>
               </div>

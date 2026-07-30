@@ -1,29 +1,35 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .serializers import CartSerializer, CartItemSerializer
 from .models import Cart, CartItem
 from product.models import Product
 
-# Create your views here.
-
 class CartCRUD(APIView):
-    def get(self, request):                             # create cart for with user id connected
-        cart = Cart.objects.get(user=request.user)
-        print(cart)
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        cart, created = Cart.objects.get_or_create(user=request.user)
         serializer = CartSerializer(cart)
         return Response(serializer.data)
 
-    def post(self, request):                             # create cartItem in cart with product_id
+    def post(self, request):
         product_id = request.data.get('product_id')
-        product = Product.objects.get(id=product_id)
-        cart = Cart.objects.get(user=request.user)
+        if not product_id:
+            return Response({'error': 'product_id is required'}, status=400)
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+
+        cart, created = Cart.objects.get_or_create(user=request.user)
         item, created = CartItem.objects.get_or_create(cart=cart, product=product)
         if not created:
             item.quantity += 1
             item.save()
-        return Response({'message': 'Product added to cart',})
+        return Response({'message': 'Product added to cart'})
 
-    def put(self, request):                        # update quantity of cartItem in cart
+    def put(self, request):                     # update quantity of cartItem in cart
         item_id = request.data.get('item_id')
         quantity = request.data.get('quantity')
 

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../api/client";
+import { registerUser } from "../api/client";
 
-function Login() {
-  const [form, setForm] = useState({ username: "", password: "" });
+function Register() {
+  const [form, setForm] = useState({ username: "", email: "", password: "", password2: "" });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
@@ -13,14 +13,19 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
+    if (form.password !== form.password2) {
+      setMsg("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await loginUser(form);
-      setMsg("Login successful!");
+      const data = await registerUser(form);
+      setMsg("Registration successful!");
       setTimeout(() => nav("/"), 800);
     } catch (err) {
       console.error(err);
-      setMsg(err.message || "Login failed");
+      setMsg("Registration failed");
     } finally {
       setLoading(false);
     }
@@ -30,7 +35,7 @@ function Login() {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-card">
-          <h2 className="auth-title">Login</h2>
+          <h2 className="auth-title">Register</h2>
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
               <label>Username</label>
@@ -39,6 +44,17 @@ function Login() {
                 onChange={handleChange}
                 value={form.username}
                 placeholder="Username"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                name="email"
+                type="email"
+                onChange={handleChange}
+                value={form.email}
+                placeholder="Email address"
                 required
               />
             </div>
@@ -53,8 +69,19 @@ function Login() {
                 required
               />
             </div>
+            <div className="form-group">
+              <label>Confirm Password</label>
+              <input
+                name="password2"
+                type="password"
+                onChange={handleChange}
+                value={form.password2}
+                placeholder="Confirm Password"
+                required
+              />
+            </div>
             <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Registering..." : "Register"}
             </button>
           </form>
           {msg && (
@@ -63,9 +90,9 @@ function Login() {
             </p>
           )}
           <div className="auth-footer">
-            Don't have an account?{" "}
-            <Link to="/register" className="auth-link-btn">
-              Sign up
+            Already have an account?{" "}
+            <Link to="/login" className="auth-link-btn">
+              Log in
             </Link>
           </div>
         </div>
@@ -74,4 +101,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;

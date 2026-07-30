@@ -4,8 +4,17 @@ import { loginUser, registerUser, logoutUser, getCurrentUser } from '../api/clie
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    // Seed from localStorage immediately so components know auth state on first render
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     // Check saved session/user on mount

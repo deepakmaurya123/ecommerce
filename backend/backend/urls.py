@@ -22,13 +22,18 @@ from django.conf.urls.static import static
 from register import views
 from order import views as order_views
 
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/register/', views.RegisterView.as_view(), name='register'),
+    path('api/login/', views.LoginView.as_view(), name='login'),
+    path('api/logout/', views.LogoutView.as_view(), name='logout'),
     path('api/', include('product.urls')),
     path('api/', include('cart.urls')),
     path('api/order/create/', order_views.OrderCreateView.as_view(), name='order-create'),
-
 ]
 
 if settings.DEBUG:
