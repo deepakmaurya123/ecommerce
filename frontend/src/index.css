@@ -254,6 +254,81 @@ img {
 }
 
 /* ===========================
+   Orders Page
+   =========================== */
+.orders-list {
+  display: grid;
+  gap: 20px;
+}
+
+.order-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 5px 10px;
+  box-shadow: var(--shadow-card);
+  max-width: 820px;
+  width: 100%;
+}
+
+.order-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 5px;
+}
+
+.order-card__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+  margin-bottom: 4px;
+}
+
+.order-card__title {
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.order-card__total {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.order-card__items {
+  display: grid;
+  gap: 10px;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+}
+
+.order-item__name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.order-item__meta {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.order-item__price {
+  color: var(--accent-light);
+  font-weight: 600;
+}
+
+/* ===========================
    Product Grid
    =========================== */
 .product-grid {

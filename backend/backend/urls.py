@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/', include('product.urls')),
     path('api/', include('cart.urls')),
     path('api/order/create/', order_views.OrderCreateView.as_view(), name='order-create'),
+    path('api/order/list/', order_views.get_order_list, name='order-list'),
 ]
 
 if settings.DEBUG:

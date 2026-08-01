@@ -89,6 +89,8 @@ export const createOrder = async (orderData) =>
     body: orderData,
   });
 
+export const getOrderList = async () => requestJson('/order/list/');
+
 export const loginUser = async (credentials) => {
   const res = await fetch(`${BASE_URL}/login/`, {
     method: 'POST',

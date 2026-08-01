@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Categories from './pages/Categories';
 import Cart from './pages/Cart';
+import Orders from './pages/Orders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/signup" element={<Register />} />

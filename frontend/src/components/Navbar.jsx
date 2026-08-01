@@ -31,6 +31,12 @@ export default function Navbar() {
             </NavLink>
           </li>
           <li>
+            <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
+              Orders
+            </NavLink>
+          </li>
+
+          <li>
             {user ? (
               <div className="navbar__user">
                 <span className="user-greeting">👤 {user.username}</span>
