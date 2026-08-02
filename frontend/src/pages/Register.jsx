@@ -4,7 +4,14 @@ import { useAuth } from "../context/AuthContext";
 
 function Register() {
   const { user, register } = useAuth();
-  const [form, setForm] = useState({ username: "", email: "", password: "", password2: "" });
+  const [form, setForm] = useState({
+    username: "",
+    email: "",
+    phone: "",
+    city: "",
+    password: "",
+    password2: "",
+  });
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
@@ -65,6 +72,26 @@ function Register() {
                 onChange={handleChange}
                 value={form.email}
                 placeholder="Email address"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Phone</label>
+              <input
+                name="phone"
+                onChange={handleChange}
+                value={form.phone}
+                placeholder="Phone number"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>City</label>
+              <input
+                name="city"
+                onChange={handleChange}
+                value={form.city}
+                placeholder="City"
                 required
               />
             </div>

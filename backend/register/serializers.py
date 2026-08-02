@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
+from .models import UserProfile
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,25 +11,32 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 
-
 class RegisterSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(required=True)
+    city = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2']
+        fields = ['username', 'email', 'phone', 'city', 'password', 'password2']
 
     def validate(self, data):
-        if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords do not match.")
+        if data.get('password') != data.get('password2'):
+            raise serializers.ValidationError({'password2': 'Passwords do not match.'})
+        if User.objects.filter(username=data.get('username')).exists():
+            raise serializers.ValidationError({'username': 'This username is already taken.'})
+        if User.objects.filter(email=data.get('email')).exists():
+            raise serializers.ValidationError({'email': 'This email is already registered.'})
         return data
 
     def create(self, validated_data):
-        username = validated_data['username']
-        email = validated_data['email']
-        password = validated_data['password']
-        user = User.objects.create_user(username=username, email=email, password=password)
+        phone = validated_data.pop('phone')
+        city = validated_data.pop('city')
+        validated_data.pop('password2')
+        password = validated_data.pop('password')
+        user = User.objects.create_user(**validated_data, password=password)
+        UserProfile.objects.create(user=user, phone=phone, city=city, isAdmin=False, isVendor=False)
         return user
 
 

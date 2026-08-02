@@ -6,6 +6,8 @@ function Login() {
   const { user, login } = useAuth();
   const location = useLocation();
   const [form, setForm] = useState({ username: "", password: "" });
+  const [vendorForm, setVendorForm] = useState({ vendorUsername: "", vendorPassword: "" });
+  const [loginType, setLoginType] = useState("user");
   const [msg, setMsg] = useState(location.state?.message || "");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
@@ -17,12 +19,22 @@ function Login() {
   }, [user, nav]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleVendorChange = (e) => setVendorForm({ ...vendorForm, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
     setLoading(true);
+
     try {
+      if (loginType === "vendor") {
+        if (!vendorForm.vendorUsername || !vendorForm.vendorPassword) {
+          throw new Error("Please enter both vendor username and password");
+        }
+        setMsg("Vendor login is not available yet. Please use the regular login for now.");
+        return;
+      }
+
       await login(form);
       setMsg("Login successful!");
       setTimeout(() => nav("/"), 800);
@@ -40,29 +52,57 @@ function Login() {
         <div className="auth-card">
           <h2 className="auth-title">Login</h2>
           <form onSubmit={handleSubmit} className="auth-form">
-            <div className="form-group">
-              <label>Username</label>
-              <input
-                name="username"
-                onChange={handleChange}
-                value={form.username}
-                placeholder="Username"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input
-                name="password"
-                type="password"
-                onChange={handleChange}
-                value={form.password}
-                placeholder="Password"
-                required
-              />
-            </div>
+            {loginType === "user" ? (
+              <>
+                <div className="form-group">
+                  <label>Username</label>
+                  <input
+                    name="username"
+                    onChange={handleChange}
+                    value={form.username}
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Password</label>
+                  <input
+                    name="password"
+                    type="password"
+                    onChange={handleChange}
+                    value={form.password}
+                    placeholder="Password"
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>Vendor Username</label>
+                  <input
+                    name="vendorUsername"
+                    onChange={handleVendorChange}
+                    value={vendorForm.vendorUsername}
+                    placeholder="Vendor Username"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Vendor Password</label>
+                  <input
+                    name="vendorPassword"
+                    type="password"
+                    onChange={handleVendorChange}
+                    value={vendorForm.vendorPassword}
+                    placeholder="Vendor Password"
+                    required
+                  />
+                </div>
+              </>
+            )}
             <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Logging in..." : loginType === "vendor" ? "Login as Vendor" : "Login"}
             </button>
           </form>
           {msg && (
@@ -75,6 +115,33 @@ function Login() {
             <Link to="/register" className="auth-link-btn">
               Sign up
             </Link>
+          </div>
+          <div className="auth-footer" style={{ marginTop: "8px" }}>
+            {loginType === "vendor" ? (
+              <>
+                Want to use user login?{" "}
+                <button
+                  type="button"
+                  className="auth-link-btn"
+                  onClick={() => setLoginType("user")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  User Login
+                </button>
+              </>
+            ) : (
+              <>
+                Are you a vendor?{" "}
+                <button
+                  type="button"
+                  className="auth-link-btn"
+                  onClick={() => setLoginType("vendor")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                >
+                  Vendor Login
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
