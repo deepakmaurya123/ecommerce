@@ -50,5 +50,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid username or password.')
         if not user.is_active:
             raise serializers.ValidationError('User account is disabled.')
+        if user.userprofile.isVendor:
+            raise serializers.ValidationError('User is a vendor. Please use the vendor login.')
         data['user'] = user
         return data

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser, registerUser, logoutUser } from '../api/client';
+import { loginUser, loginVendor, registerUser, logoutUser } from '../api/client';
 
 const AuthContext = createContext();
 
@@ -15,7 +15,6 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
 
-
   useEffect(() => {
     // Load auth state from localStorage on mount
     const savedUser = localStorage.getItem('user');
@@ -27,6 +26,15 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     const data = await loginUser(credentials);
+    if (data.user) {
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    return data;
+  };
+
+  const vendorLogin = async (credentials) => {
+    const data = await loginVendor(credentials);
     if (data.user) {
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -52,7 +60,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, vendorLogin, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

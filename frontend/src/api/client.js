@@ -108,6 +108,28 @@ export const loginUser = async (credentials) => {
   return data;
 };
 
+export const loginVendor = async (credentials) => {
+  const payload = {
+    username: credentials.username || credentials.vendorUsername || '',
+    password: credentials.password || credentials.vendorPassword || '',
+  };
+
+  const res = await fetch(`${BASE_URL}/vendor/login/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = data.error || data.detail || data.message || 'Vendor login failed';
+    throw Object.assign(new Error(errorMsg), { status: res.status, data });
+  }
+  if (data.access) localStorage.setItem('access_token', data.access);
+  if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+  if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+  return data;
+};
+
 export const registerUser = async (userData) => {
   const res = await fetch(`${BASE_URL}/register/`, {
     method: 'POST',
