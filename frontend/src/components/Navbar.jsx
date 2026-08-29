@@ -37,12 +37,6 @@ export default function Navbar() {
           </li>
 
           <li>
-            <NavLink to="/vendor/login" className={({ isActive }) => `navbar__login-btn ${isActive ? 'active' : ''}`}>
-              Vendor Login
-            </NavLink>
-          </li>
-
-          <li>
             {user ? (
               <div className="navbar__user">
                 <span className="user-greeting">👤 {user.username}</span>

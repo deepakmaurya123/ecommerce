@@ -3,17 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function VendorLogin() {
-  const { user, vendorLogin } = useAuth();
+  const { user, authRole, vendorLogin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (authRole === 'vendor' && user) {
       navigate('/vendor/home');
     }
-  }, [user, navigate]);
+  }, [authRole, user, navigate]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));

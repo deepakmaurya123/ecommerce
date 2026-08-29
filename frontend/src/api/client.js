@@ -1,5 +1,51 @@
 const BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
 
+const readStoredValue = (key) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveAuthSession = (role, data) => {
+  const isVendor = role === 'vendor';
+  const accessKey = isVendor ? 'vendor_access_token' : 'customer_access_token';
+  const refreshKey = isVendor ? 'vendor_refresh_token' : 'customer_refresh_token';
+  const userKey = isVendor ? 'vendor_user' : 'customer_user';
+
+  if (data?.access) {
+    localStorage.setItem(accessKey, data.access);
+    localStorage.setItem('access_token', data.access);
+  }
+  if (data?.refresh) {
+    localStorage.setItem(refreshKey, data.refresh);
+    localStorage.setItem('refresh_token', data.refresh);
+  }
+  if (data?.user) {
+    localStorage.setItem(userKey, JSON.stringify(data.user));
+    localStorage.setItem('user', JSON.stringify(data.user));
+  }
+
+  localStorage.setItem('auth_role', role);
+};
+
+const clearAuthSession = (role) => {
+  const isVendor = role === 'vendor';
+  const accessKey = isVendor ? 'vendor_access_token' : 'customer_access_token';
+  const refreshKey = isVendor ? 'vendor_refresh_token' : 'customer_refresh_token';
+  const userKey = isVendor ? 'vendor_user' : 'customer_user';
+
+  localStorage.removeItem(accessKey);
+  localStorage.removeItem(refreshKey);
+  localStorage.removeItem(userKey);
+
+  if (localStorage.getItem('auth_role') === role) {
+    localStorage.removeItem('auth_role');
+  }
+};
+
 const apiFetch = async (endpoint) => {
   const res = await fetch(`${BASE_URL}${endpoint}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -7,7 +53,10 @@ const apiFetch = async (endpoint) => {
 };
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token');
+  const role = localStorage.getItem('auth_role');
+  const token = role === 'vendor'
+    ? localStorage.getItem('vendor_access_token') || localStorage.getItem('access_token')
+    : localStorage.getItem('customer_access_token') || localStorage.getItem('access_token');
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -102,9 +151,7 @@ export const loginUser = async (credentials) => {
     const errorMsg = data.error || data.detail || 'Login failed';
     throw Object.assign(new Error(errorMsg), { status: res.status, data });
   }
-  if (data.access) localStorage.setItem('access_token', data.access);
-  if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-  if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+  saveAuthSession('customer', data);
   return data;
 };
 
@@ -124,9 +171,7 @@ export const loginVendor = async (credentials) => {
     const errorMsg = data.error || data.detail || data.message || 'Vendor login failed';
     throw Object.assign(new Error(errorMsg), { status: res.status, data });
   }
-  if (data.access) localStorage.setItem('access_token', data.access);
-  if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-  if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+  saveAuthSession('vendor', data);
   return data;
 };
 
@@ -156,16 +201,21 @@ export const registerUser = async (userData) => {
   return data;
 };
 
-export const logoutUser = async () => {
-  const refresh = localStorage.getItem('refresh_token');
+export const logoutUser = async (role = null) => {
+  const activeRole = role || localStorage.getItem('auth_role') || 'customer';
+  const refreshKey = activeRole === 'vendor' ? 'vendor_refresh_token' : 'customer_refresh_token';
+  const refresh = localStorage.getItem(refreshKey);
   const res = await fetch(`${BASE_URL}/logout/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh }),
   });
+
+  clearAuthSession(activeRole);
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user');
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error('Logout failed'), { status: res.status, data });
   return data;

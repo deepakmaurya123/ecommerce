@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
-  const { user, login } = useAuth();
+  const { user, authRole, login } = useAuth();
   const location = useLocation();
   const [form, setForm] = useState({ username: "", password: "" });
   const [msg, setMsg] = useState(location.state?.message || "");
@@ -11,10 +11,10 @@ function Login() {
   const nav = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      nav(user.isVendor ? "/vendor/home" : "/");
+    if (authRole === 'customer' && user) {
+      nav('/');
     }
-  }, [user, nav]);
+  }, [authRole, user, nav]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 

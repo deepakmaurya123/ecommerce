@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getOrderList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import NestAI from '../components/NestAI';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -90,9 +91,10 @@ export default function Orders() {
           </div>
         )}
 
-        {!loading && !error && orders.length > 0 && (
+
+        <div className="orders-layout">
           <div className="orders-list">
-            {orders.map((order) => (
+            {!loading && !error && orders.length > 0 && orders.map((order) => (
               <article key={order.id} className="order-card">
                 <div className="order-card__header">
                   <div>
@@ -118,7 +120,9 @@ export default function Orders() {
               </article>
             ))}
           </div>
-        )}
+
+          <NestAI />
+        </div>
       </div>
     </div>
   );

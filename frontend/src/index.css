@@ -261,6 +261,13 @@ img {
   gap: 20px;
 }
 
+.orders-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
 .order-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -327,6 +334,49 @@ img {
   color: var(--accent-light);
   font-weight: 600;
 }
+
+/* ===========================
+   NestAI Support
+   =========================== */
+.nest-ai {
+  position: sticky;
+  top: 88px;
+  overflow: hidden;
+  border: 1px solid rgba(157, 130, 253, 0.28);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, #1d1b31 0%, var(--bg-card) 48%, #13151e 100%);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+}
+.nest-ai__header { display: flex; align-items: center; justify-content: space-between; padding: 18px; border-bottom: 1px solid var(--border); }
+.nest-ai__identity { display: flex; align-items: center; gap: 11px; }
+.nest-ai__avatar { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(192, 132, 252, 0.5); border-radius: 12px; background: linear-gradient(135deg, #805cf5, #c084fc); color: white; font-size: 1.1rem; font-weight: 700; }
+.nest-ai__name { font-weight: 700; color: var(--text-primary); }
+.nest-ai__status { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 0.7rem; }
+.nest-ai__status span { width: 6px; height: 6px; border-radius: 50%; background: #62d99b; box-shadow: 0 0 8px #62d99b; }
+.nest-ai__more { border: 0; background: none; color: var(--text-secondary); cursor: pointer; letter-spacing: 2px; }
+.nest-ai__body { padding: 20px 18px 16px; }
+.nest-ai__intro { display: flex; gap: 10px; margin-bottom: 20px; }
+.nest-ai__spark { color: #c084fc; font-size: 1.3rem; }
+.nest-ai h2 { font-size: 1rem; margin-bottom: 3px; }
+.nest-ai__intro p { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.45; }
+.nest-ai__messages { display: grid; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 2px; }
+.nest-ai__message { max-width: 88%; padding: 10px 12px; border-radius: 12px; font-size: 0.8rem; line-height: 1.5; }
+.nest-ai__message--agent { border: 1px solid var(--border); border-top-left-radius: 4px; background: rgba(255, 255, 255, 0.055); color: var(--text-secondary); }
+.nest-ai__message--customer { justify-self: end; border-top-right-radius: 4px; background: var(--accent); color: white; }
+.nest-ai__typing { display: flex; gap: 4px; width: fit-content; }
+.nest-ai__typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--text-secondary); animation: nest-ai-bounce 900ms infinite alternate; }
+.nest-ai__typing span:nth-child(2) { animation-delay: 150ms; }
+.nest-ai__typing span:nth-child(3) { animation-delay: 300ms; }
+@keyframes nest-ai-bounce { to { transform: translateY(-3px); opacity: 0.5; } }
+.nest-ai__prompts { display: flex; flex-wrap: wrap; gap: 7px; margin: 18px 0; }
+.nest-ai__prompts button { padding: 7px 9px; border: 1px solid rgba(157, 130, 253, 0.28); border-radius: 7px; background: rgba(124, 92, 252, 0.08); color: var(--accent-light); cursor: pointer; font: inherit; font-size: 0.7rem; }
+.nest-ai__prompts button:hover { background: rgba(124, 92, 252, 0.18); }
+.nest-ai__composer { display: flex; gap: 8px; padding: 6px 6px 6px 12px; border: 1px solid var(--border-hover); border-radius: 10px; background: rgba(0, 0, 0, 0.2); }
+.nest-ai__composer input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.8rem; }
+.nest-ai__composer input::placeholder { color: var(--text-muted); }
+.nest-ai__composer button { width: 28px; height: 28px; border: 0; border-radius: 7px; background: var(--accent); color: white; cursor: pointer; font-size: 1.1rem; line-height: 1; }
+.nest-ai__composer button:disabled { cursor: not-allowed; opacity: 0.35; }
+.nest-ai__notice { margin-top: 10px; color: var(--text-muted); font-size: 0.65rem; text-align: center; }
 
 /* ===========================
    Product Grid
@@ -619,6 +669,12 @@ img {
    Responsive
    =========================== */
 @media (max-width: 768px) {
+  .orders-layout {
+    grid-template-columns: 1fr;
+  }
+  .nest-ai {
+    position: static;
+  }
   .layout-sidebar {
     grid-template-columns: 1fr;
   }

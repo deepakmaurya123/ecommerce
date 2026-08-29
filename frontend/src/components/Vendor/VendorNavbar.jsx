@@ -34,10 +34,17 @@ export default function VendorNavbar() {
         <div className="vendor-navbar__actions">
           <div className="vendor-user-profile">
             <span className="vendor-user-avatar">🏪</span>
-            <div className="vendor-user-info">
-              <span className="vendor-user-name">{user?.username || 'Vendor'}</span>
-              <span className="vendor-user-role">{user?.company_name || 'Your company'}</span>
-            </div>
+            {user ? (
+              <>
+                <div className="vendor-user-info">
+                  <span className="vendor-user-name">{user?.username || 'Vendor'}</span>
+                  <span className="vendor-user-role">{user?.company_name || 'Your company'}</span>
+                </div>
+                <button type="button" onClick={handleLogout} className="navbar__logout-btn">
+                  Logout
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
