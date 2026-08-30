@@ -139,6 +139,12 @@ export const createOrder = async (orderData) =>
   });
 
 export const getOrderList = async () => requestJson('/order/list/');
+export const getOrderDetail = async (orderId) => requestJson(`/order/detail/${orderId}/`);
+export const sendChatMessage = async (orderId, message, order) =>
+  requestJson(`/chat/${orderId}/`, {
+    method: 'POST',
+    body: { message, order },
+  });
 
 export const loginUser = async (credentials) => {
   const res = await fetch(`${BASE_URL}/login/`, {

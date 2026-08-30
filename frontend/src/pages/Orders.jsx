@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { getOrderList } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import NestAI from '../components/NestAI';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -95,33 +94,58 @@ export default function Orders() {
         <div className="orders-layout">
           <div className="orders-list">
             {!loading && !error && orders.length > 0 && orders.map((order) => (
-              <article key={order.id} className="order-card">
-                <div className="order-card__header">
-                  <div>
-                    <p className="order-card__label">Order #{order.id}</p>
-                    <h3 className="order-card__title">Placed on {formatDate(order.created_at)}</h3>
+              <NavLink
+                key={order.id}
+                to={`/orders/details/${order.id}`}
+                className="order-card-link"
+                style={{ textDecoration: 'none', display: 'block', marginBottom: 16 }}
+              >
+                <article className="order-card" style={{ cursor: 'pointer' }}>
+                  <div className="order-card__header">
+                    <div>
+                      <p className="order-card__label">Order #{order.id}</p>
+                      <h3 className="order-card__title">{formatDate(order.created_at)}</h3>
+                    </div>
+                    <div className="order-card__total">₹{Number(order.total_amount || 0).toLocaleString('en-IN')}</div>
                   </div>
-                  <div className="order-card__total">₹{Number(order.total_amount || 0).toLocaleString('en-IN')}</div>
-                </div>
 
-                <div className="order-card__body">
-                  <div className="order-card__items">
-                    {order.items?.map((item, idx) => (
-                      <div key={`${order.id}-${idx}`} className="order-item-row">
-                        <div>
-                          <p className="order-item__name">{item.product}</p>
-                          <p className="order-item__meta">Qty: {item.quantity}</p>
-                        </div>
-                        <div className="order-item__price">₹{Number(item.price || 0).toLocaleString('en-IN')}</div>
+                  <div className="order-card__body">
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                      gap: 12,
+                      marginBottom: 16,
+                    }}>
+                      <div>
+                        <p className="order-item__meta" style={{ margin: 0, textTransform: 'uppercase' }}>Status</p>
+                        <strong>{order.status || 'Pending'}</strong>
                       </div>
-                    ))}
+                      <div>
+                        <p className="order-item__meta" style={{ margin: 0, textTransform: 'uppercase' }}>Tracking</p>
+                        <strong>{order.tracking_number || '—'}</strong>
+                      </div>
+                      <div>
+                        <p className="order-item__meta" style={{ margin: 0, textTransform: 'uppercase' }}>Delivery</p>
+                        <strong>{order.delivery || '—'}</strong>
+                      </div>
+                    </div>
+
+                    <div className="order-card__items">
+                      {order.items?.map((item, idx) => (
+                        <div key={`${order.id}-${idx}`} className="order-item-row">
+                          <div>
+                            <p className="order-item__name">{item.product}</p>
+                            <p className="order-item__meta">Qty: {item.quantity}</p>
+                          </div>
+                          <div className="order-item__price">₹{Number(item.price || 0).toLocaleString('en-IN')}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </NavLink>
             ))}
           </div>
-
-          <NestAI />
         </div>
       </div>
     </div>

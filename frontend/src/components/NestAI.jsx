@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { getOrderDetail, sendChatMessage } from '../api/client';
 
 const starterPrompts = ['Where is my order?', 'I need to return an item', 'Payment help'];
 
 const getReply = (message) => {
   const prompt = message.toLowerCase();
   if (prompt.includes('return')) {
-    return 'I can help with that. Most items can be returned within 7 days of delivery. Share your order number and I will guide you through the next step.';               
+    return 'I can help with that. Most items can be returned within 7 days of delivery. Share your order number and I will guide you through the next step.';
   }
   if (prompt.includes('payment')) {
     return 'For payment issues, please check that your bank or UPI app shows the transaction as successful. I can help investigate with your order number.';
@@ -16,24 +17,69 @@ const getReply = (message) => {
   return 'I am here to help with orders, returns, payments, and delivery questions. What would you like to sort out?';
 };
 
-export default function NestAI() {
+export default function NestAI({ orderId }) {
+  const [order, setOrder] = useState(null);
+  const [orderLoading, setOrderLoading] = useState(Boolean(orderId));
   const [messages, setMessages] = useState([
     { id: 1, role: 'agent', text: 'Hi there. I am NestAI, your order support assistant. How can I help today?' },
   ]);
   const [draft, setDraft] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const sendMessage = (message = draft) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (!orderId) return undefined;
+
+    let isMounted = true;
+    setOrderLoading(true);
+    getOrderDetail(orderId)
+      .then((data) => {
+        if (isMounted) setOrder(data?.order || null);
+      })
+      .catch(() => {
+        if (isMounted) setOrder(null);
+      })
+      .finally(() => {
+        if (isMounted) setOrderLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [orderId]);
+
+  const sendMessage = async (message = draft) => {
     const text = message.trim();
     if (!text || isTyping) return;
 
+    console.log('Customer message:', text);
     setMessages((current) => [...current, { id: Date.now(), role: 'customer', text }]);
     setDraft('');
     setIsTyping(true);
-    window.setTimeout(() => {
-      setMessages((current) => [...current, { id: Date.now(), role: 'agent', text: getReply(text) }]);
+
+    try {
+      if (orderId) {
+        const data = await sendChatMessage(orderId, text, order);
+        setMessages((current) => [...current, { id: Date.now(), role: 'agent', text: data.reply }]);
+      } else {
+        // Fallback to local responses
+        await new Promise(resolve => setTimeout(resolve, 650));
+        setMessages((current) => [...current, { id: Date.now(), role: 'agent', text: getReply(text) }]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages((current) => [...current, { id: Date.now(), role: 'agent', text: 'Sorry, there was an error. Please try again.' }]);
+    } finally {
       setIsTyping(false);
-    }, 650);
+    }
   };
 
   return (
@@ -64,14 +110,17 @@ export default function NestAI() {
             </div>
           ))}
           {isTyping && <div className="nest-ai__message nest-ai__message--agent nest-ai__typing"><span /><span /><span /></div>}
+          <div ref={messagesEndRef} />
         </div>
-        <div className="nest-ai__prompts">
-          {starterPrompts.map((prompt) => (
-            <button key={prompt} type="button" onClick={() => sendMessage(prompt)}>{prompt}</button>
-          ))}
-        </div>
+        {messages.length === 1 && (
+          <div className="nest-ai__prompts">
+            {starterPrompts.map((prompt) => (
+              <button key={prompt} type="button" onClick={() => sendMessage(prompt)}>{prompt}</button>
+            ))}
+          </div>
+        )}
         <form className="nest-ai__composer" onSubmit={(event) => { event.preventDefault(); sendMessage(); }}>
-          <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write a message..." aria-label="Message NestAI" />
+          <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={orderLoading ? 'Loading order...' : 'Write a message...'} aria-label="Message NestAI" disabled={orderLoading} />
           <button type="submit" aria-label="Send message" disabled={!draft.trim() || isTyping}>↑</button>
         </form>
         <p className="nest-ai__notice">NestAI can make mistakes. Never share payment passwords.</p>

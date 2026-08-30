@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Categories from './pages/Categories';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import OrderDetails from './pages/OrderDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VendorHome from './pages/Vendor/Home';
@@ -23,6 +24,7 @@ function AppLayout() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/details/:orderId" element={<OrderDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/signup" element={<Register />} />

@@ -28,7 +28,10 @@ def get_order_list(request):
                 'id': order.id,
                 'total_amount': order.total_amount,
                 'created_at': order.created_at,
-                'items': item_list
+                'items': item_list,
+                'status': order.status,
+                'tracking_number': order.tracking_number,
+                'delivery': order.delivery,
             })
         return Response({'orders': order_list}, status=status.HTTP_200_OK)
     except Exception as e:
@@ -69,3 +72,48 @@ class OrderCreateView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def chat(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    user_message = request.data.get('message', '').strip()
+    if not user_message:
+        return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({
+        'reply': f"I am checking order #{order.id} for you. Your message was: {user_message}",
+    }, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_order_detail(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+        items = OrderItem.objects.filter(order=order)
+        item_list = []
+        for item in items:
+            item_list.append({
+                'product': item.product.name,
+                'quantity': item.quantity,
+                'price': item.price,
+            })
+        order_detail = {
+            'id': order.id,
+            'total_amount': order.total_amount,
+            'created_at': order.created_at,
+            'items': item_list,
+            'status': order.status,
+            'tracking_number': order.tracking_number,
+            'delivery': order.delivery,
+        }
+        return Response({'order': order_detail}, status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
