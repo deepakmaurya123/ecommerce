@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'order',
     'register',
     'vendor',
+    'support',
 ]
 
 MIDDLEWARE = [

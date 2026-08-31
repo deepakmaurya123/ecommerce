@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getOrderDetail, sendChatMessage } from '../api/client';
 
-const starterPrompts = ['Where is my order?', 'I need to return an item', 'Payment help'];
+const starterPrompts = ['Where is my order?', 'I need a refund status', 'My delivery details'];
 
 const getReply = (message) => {
   const prompt = message.toLowerCase();
