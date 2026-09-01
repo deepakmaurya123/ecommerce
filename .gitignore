@@ -4,3 +4,7 @@ media
 .venv
 
 documents
+
+__pycache__
+
+chroma_db

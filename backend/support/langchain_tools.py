@@ -3,6 +3,7 @@ from .tools import (
     get_order_details as _get_order_details,
     get_refund_history as _get_refund_history,
     check_delivery_status as _check_delivery_status,
+    search_knowledge_base as _search_knowledge_base
 )
 
 
@@ -26,7 +27,7 @@ def check_delivery_status(tracking_number: str, carrier: str) -> dict:
     return _check_delivery_status(tracking_number, carrier)
 
 
-# @tool
-# def search_knowledge_base(query: str) -> dict:
-#     """Search ShopNest E-Commercecompany documents including refund policy, warranty policy, and product FAQs. Use this when customer asks about company policies, warranty coverage, warranty claims, refund eligibility, or any general product information that requires accurate company documentation."""
-#     return _search_knowledge_base(query)
+@tool
+def search_knowledge_base(query: str) -> dict:
+    """Search ShopNest E-Commercecompany documents including refund policy. Use this when customer asks about company policies, refund eligibility, or any general product information that requires accurate company documentation."""
+    return _search_knowledge_base(query)

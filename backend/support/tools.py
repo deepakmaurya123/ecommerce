@@ -3,6 +3,7 @@ from datetime import datetime
 from order.models import Order, RefundRequest
 from django.utils import timezone
 from .tracking_data import DELIVERY_DATA
+from .rag import search_knowledge_base as rag_search
 
 
 def get_order_details(order_id):
@@ -53,8 +54,6 @@ def check_delivery_status(tracking_number, carrier):
     result["carrier"] = carrier
     return result
 
-
-# wrapper function
-# def search_knowledge_base(query):
-#     result = rag_search(query)
-#     return {"result": result}
+def search_knowledge_base(query):
+    result = rag_search(query)
+    return {"result": result}

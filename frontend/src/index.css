@@ -361,7 +361,7 @@ img {
 .nest-ai__intro p { color: var(--text-secondary); font-size: 0.78rem; line-height: 1.45; }
 .nest-ai__messages { display: grid; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 2px; }
 .nest-ai__message { max-width: 88%; padding: 10px 12px; border-radius: 12px; font-size: 0.8rem; line-height: 1.5; }
-.nest-ai__message--agent { border: 1px solid var(--border); border-top-left-radius: 4px; background: rgba(255, 255, 255, 0.055); color: var(--text-secondary); }
+.nest-ai__message--agent { border: 1px solid var(--border); border-top-left-radius: 4px; background: rgba(255, 255, 255, 0.055); color: white; }
 .nest-ai__message--customer { justify-self: end; border-top-right-radius: 4px; background: var(--accent); color: white; }
 .nest-ai__typing { display: flex; gap: 4px; width: fit-content; }
 .nest-ai__typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--text-secondary); animation: nest-ai-bounce 900ms infinite alternate; }

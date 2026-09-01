@@ -1,8 +1,6 @@
 from langchain.agents import create_agent
-from langchain_openai import ChatOpenAI
-from .langchain_tools import get_order_details, get_refund_history, check_delivery_status
+from .langchain_tools import get_order_details, get_refund_history, check_delivery_status, search_knowledge_base
 from .agents import SUPPORT_SYSTEM_PROMPT
-from .models import Conversation, AgentLog
 from langgraph.checkpoint.memory import InMemorySaver
 
 import os
@@ -16,7 +14,7 @@ llm = ChatGroq(model=os.getenv("GROQ_MODEL"), groq_api_key=os.getenv("GROQ_API_K
 
 
 
-SUPPORT_TOOLS = [get_order_details, get_refund_history, check_delivery_status]  # It will told to LLM, these functions are available to call.
+SUPPORT_TOOLS = [get_order_details, get_refund_history, check_delivery_status, search_knowledge_base]  # It will told to LLM, these functions are available to call.
 
 checkpointer = InMemorySaver()
 

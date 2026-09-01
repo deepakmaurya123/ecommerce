@@ -19,12 +19,13 @@ def chat(request, order_id):
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
     user_message = request.data.get('message', '').strip()
+    # if not user_message:
+    # return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     conversation, created = Conversation.objects.get_or_create(user=request.user, order=order)
     Message.objects.create(conversation=conversation, role="user", content=user_message)
 
-    # if not user_message:
-    #     return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
 
     reply = run_support_langchain(user_message, conversation.id, order.id, request.user.id)
 

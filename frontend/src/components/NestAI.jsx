@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getOrderDetail, sendChatMessage } from '../api/client';
 
-const starterPrompts = ['Where is my order?', 'I need a refund status', 'My delivery details'];
+const starterPrompts = ['Where is my order?', 'I need to check refund status', 'My delivery details'];
 
 const getReply = (message) => {
   const prompt = message.toLowerCase();
@@ -92,7 +92,7 @@ export default function NestAI({ orderId }) {
             <div className="nest-ai__status"><span /> Online support assistant</div>
           </div>
         </div>
-        <button className="nest-ai__more" type="button" aria-label="More support options">•••</button>
+        <button className="nest-ai__more" type="button" aria-label="More support options"></button>
       </div>
 
       <div className="nest-ai__body">

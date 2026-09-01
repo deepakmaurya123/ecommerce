@@ -1,12 +1,4 @@
 
-from django.conf import settings
-from .tools import get_order_details, get_refund_history, check_delivery_status
-from .models import Conversation, Message, AgentLog
-
-
-# Initialize Groq client
-
-
 
 # SUPPORT SYSTEM PROMPT --> NestAI's job description
 SUPPORT_SYSTEM_PROMPT = """
@@ -81,6 +73,21 @@ SUPPORT_TOOLS = [
                 }
             },
             "required": ["tracking_number", "carrier"]
+        }
+    },
+
+    {
+        "name": "search_knowledge_base",
+        "description": "Search ShopNest company documents including refund policy. Use this when customer asks about company policies, refund eligibility, or any general product information that requires accurate company documentation.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query to find relevant information from company documents. Be specific — for example 'refund eligibility within 30 days' instead of just 'refund'."
+                }
+            },
+            "required": ["query"]
         }
     }
 ]
